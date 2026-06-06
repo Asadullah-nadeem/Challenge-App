@@ -140,8 +140,12 @@ public class DaysLeftWidget extends AppWidgetProvider {
                                 int appWidgetId) {
         int daysLeft = calculateDaysLeftInYear();
         
+        android.content.SharedPreferences prefs = context.getSharedPreferences("ChallengeAppPrefs", Context.MODE_PRIVATE);
+        int currentStreak = prefs.getInt("currentStreak", 0);
+        
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         views.setTextViewText(R.id.widgetTvDaysLeft, String.valueOf(daysLeft));
+        views.setTextViewText(R.id.widgetTvCurrentStreak, "Github Streak: " + currentStreak + " 🔥");
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }

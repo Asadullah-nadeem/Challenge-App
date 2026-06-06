@@ -51,6 +51,17 @@
             android:fontFamily="monospace"
             android:layout_marginTop="16dp" />
 
+        <TextView
+            android:id="@+id/tvCurrentStreak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GitHub Current Streak: 0 🔥"
+            android:textColor="#FFA500"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="24dp" />
+
     </LinearLayout>
 
 </RelativeLayout>
