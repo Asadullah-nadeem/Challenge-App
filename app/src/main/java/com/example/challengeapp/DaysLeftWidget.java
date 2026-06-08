@@ -18,11 +18,16 @@ import java.util.Calendar;
 public class DaysLeftWidget extends AppWidgetProvider {
 
     public static final String ACTION_AUTO_UPDATE = "com.example.challengeapp.AUTO_UPDATE";
+    public static final String ACTION_MANUAL_RELOAD = "com.example.challengeapp.MANUAL_RELOAD";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         
+        if (ACTION_MANUAL_RELOAD.equals(intent.getAction())) {
+            android.widget.Toast.makeText(context, "Refreshing data...", android.widget.Toast.LENGTH_SHORT).show();
+        }
+
         if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
             Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
             
@@ -30,6 +35,7 @@ public class DaysLeftWidget extends AppWidgetProvider {
         }
 
         if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
+            ACTION_MANUAL_RELOAD.equals(intent.getAction()) ||
             Intent.ACTION_DATE_CHANGED.equals(intent.getAction()) ||
             Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
             Intent.ACTION_TIME_CHANGED.equals(intent.getAction()) ||
@@ -80,18 +86,33 @@ public class DaysLeftWidget extends AppWidgetProvider {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
         
+        // Use application context to avoid memory leaks or issues with short-lived context
+        final Context appContext = context.getApplicationContext();
+        
         // Trigger background fetch
-        GitHubDataFetcher.fetchContributionData(context, new GitHubDataFetcher.GitHubDataListener() {
+        GitHubDataFetcher.fetchContributionData(appContext, new GitHubDataFetcher.GitHubDataListener() {
             @Override
             public void onSuccess(int streak, int todayContributions) {
-                for (int appWidgetId : appWidgetIds) {
-                    updateAppWidget(context, appWidgetManager, appWidgetId);
+                // Update all widgets with new data
+                AppWidgetManager manager = AppWidgetManager.getInstance(appContext);
+                ComponentName thisWidget = new ComponentName(appContext, DaysLeftWidget.class);
+                int[] ids = manager.getAppWidgetIds(thisWidget);
+                for (int appWidgetId : ids) {
+                    updateAppWidget(appContext, manager, appWidgetId);
                 }
+                
+                // Show success toast on main thread
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    android.widget.Toast.makeText(appContext, "Streak updated!", android.widget.Toast.LENGTH_SHORT).show();
+                });
             }
 
             @Override
             public void onError(Exception e) {
-                // Ignore errors for background update
+                // Show error toast on main thread
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    android.widget.Toast.makeText(appContext, "Update failed: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                });
             }
         });
         
@@ -164,6 +185,17 @@ public class DaysLeftWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.widgetTvDaysLeft, String.valueOf(daysLeft));
         views.setTextViewText(R.id.widgetTvCurrentStreak, "Github Streak: " + currentStreak + " 🔥");
         views.setTextViewText(R.id.widgetTvTodayContributions, "Today: " + todayContributions);
+
+        // Set click listener for reload button
+        Intent reloadIntent = new Intent(context, DaysLeftWidget.class);
+        reloadIntent.setAction(ACTION_MANUAL_RELOAD);
+        
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, reloadIntent, flags);
+        views.setOnClickPendingIntent(R.id.widgetBtnReload, pendingIntent);
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }

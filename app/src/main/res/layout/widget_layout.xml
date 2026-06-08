@@ -1,50 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:orientation="vertical"
-    android:gravity="center"
     android:padding="8dp">
 
-    <TextView
-        android:id="@+id/widgetTvDaysLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textColor="#FFFFFF"
-        android:textSize="36sp"
-        android:fontFamily="sans-serif-black"
-        android:includeFontPadding="false" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Days Left"
-        android:textColor="#AAAAAA"
-        android:textSize="12sp"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginTop="4dp" />
+        <TextView
+            android:id="@+id/widgetTvDaysLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="#FFFFFF"
+            android:textSize="36sp"
+            android:fontFamily="sans-serif-black"
+            android:includeFontPadding="false" />
 
-    <TextView
-        android:id="@+id/widgetTvCurrentStreak"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Github Streak: 0 🔥"
-        android:textColor="#FFA500"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginTop="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Days Left"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="4dp" />
 
-    <TextView
-        android:id="@+id/widgetTvTodayContributions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Today: 0"
-        android:textColor="#4CAF50"
-        android:textSize="12sp"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginTop="2dp" />
+        <TextView
+            android:id="@+id/widgetTvCurrentStreak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Github Streak: 0 🔥"
+            android:textColor="#FFA500"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="8dp" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/widgetTvTodayContributions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today: 0"
+            android:textColor="#4CAF50"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="2dp" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/widgetBtnReload"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_refresh"
+        android:scaleType="centerInside"
+        android:padding="4dp"
+        android:contentDescription="Reload" />
+
+</RelativeLayout>
