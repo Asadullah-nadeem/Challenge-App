@@ -79,6 +79,22 @@ public class DaysLeftWidget extends AppWidgetProvider {
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
+        
+        // Trigger background fetch
+        GitHubDataFetcher.fetchContributionData(context, new GitHubDataFetcher.GitHubDataListener() {
+            @Override
+            public void onSuccess(int streak, int todayContributions) {
+                for (int appWidgetId : appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Ignore errors for background update
+            }
+        });
+        
         scheduleNextUpdate(context);
     }
 
@@ -142,10 +158,12 @@ public class DaysLeftWidget extends AppWidgetProvider {
         
         android.content.SharedPreferences prefs = context.getSharedPreferences("ChallengeAppPrefs", Context.MODE_PRIVATE);
         int currentStreak = prefs.getInt("currentStreak", 0);
+        int todayContributions = prefs.getInt("todayContributions", 0);
         
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         views.setTextViewText(R.id.widgetTvDaysLeft, String.valueOf(daysLeft));
         views.setTextViewText(R.id.widgetTvCurrentStreak, "Github Streak: " + currentStreak + " 🔥");
+        views.setTextViewText(R.id.widgetTvTodayContributions, "Today: " + todayContributions);
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }

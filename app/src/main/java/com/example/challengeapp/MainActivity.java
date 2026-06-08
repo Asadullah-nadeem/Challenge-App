@@ -60,8 +60,13 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("ChallengeAppPrefs", MODE_PRIVATE);
         int cachedStreak = prefs.getInt("currentStreak", 0);
+        int cachedContributions = prefs.getInt("todayContributions", 0);
+        
         TextView tvCurrentStreak = findViewById(R.id.tvCurrentStreak);
         tvCurrentStreak.setText("GitHub Current Streak: " + cachedStreak + " 🔥");
+        
+        TextView tvTodayContributions = findViewById(R.id.tvTodayContributions);
+        tvTodayContributions.setText("Today's Contributions: " + cachedContributions);
 
         fetchGitHubStreak();
         updateTime();
@@ -125,88 +130,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchGitHubStreak() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(new Runnable() {
+        GitHubDataFetcher.fetchContributionData(this, new GitHubDataFetcher.GitHubDataListener() {
             @Override
-            public void run() {
-                try {
-                    URL url = new URL(GitHubConfig.API_URL.getUrl());
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
+            public void onSuccess(int streak, int todayContributions) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    TextView tvCurrentStreak = findViewById(R.id.tvCurrentStreak);
+                    tvCurrentStreak.setText("GitHub Current Streak: " + streak + " 🔥");
+                    
+                    TextView tvTodayContributions = findViewById(R.id.tvTodayContributions);
+                    tvTodayContributions.setText("Today's Contributions: " + todayContributions);
+                    
+                    updateWidgetStreak();
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    TextView tvCurrentStreak = findViewById(R.id.tvCurrentStreak);
+                    if (tvCurrentStreak.getText().toString().contains("0")) {
+                        tvCurrentStreak.setText("GitHub Current Streak: Error");
                     }
-                    reader.close();
-                    
-                    JSONObject jsonObject = new JSONObject(sb.toString());
-                    JSONArray weeks = jsonObject.getJSONArray("contributions");
-                    
-                    int streak = 0;
-                    boolean active = true;
-                    boolean foundToday = false;
-                    
-                    Calendar todayCal = Calendar.getInstance();
-                    String todayStr = String.format(Locale.US, "%04d-%02d-%02d", 
-                            todayCal.get(Calendar.YEAR), todayCal.get(Calendar.MONTH) + 1, todayCal.get(Calendar.DAY_OF_MONTH));
-                    
-                    Calendar yesterdayCal = Calendar.getInstance();
-                    yesterdayCal.add(Calendar.DAY_OF_YEAR, -1);
-                    String yesterdayStr = String.format(Locale.US, "%04d-%02d-%02d", 
-                            yesterdayCal.get(Calendar.YEAR), yesterdayCal.get(Calendar.MONTH) + 1, yesterdayCal.get(Calendar.DAY_OF_MONTH));
-                    
-                    outer:
-                    for (int i = weeks.length() - 1; i >= 0 && active; i--) {
-                        JSONArray days = weeks.getJSONArray(i);
-                        for (int j = days.length() - 1; j >= 0 && active; j--) {
-                            JSONObject day = days.getJSONObject(j);
-                            String date = day.getString("date");
-                            int count = day.getInt("contributionCount");
-                            
-                            if (!foundToday) {
-                                if (date.equals(todayStr)) {
-                                    foundToday = true;
-                                    if (count > 0) streak++;
-                                } else if (date.equals(yesterdayStr)) {
-                                    foundToday = true;
-                                    if (count > 0) streak++;
-                                    else active = false;
-                                }
-                            } else {
-                                if (count > 0) {
-                                    streak++;
-                                } else {
-                                    active = false;
-                                }
-                            }
-                        }
-                    }
-                    
-                    final int finalStreak = streak;
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            TextView tvCurrentStreak = findViewById(R.id.tvCurrentStreak);
-                            tvCurrentStreak.setText("GitHub Current Streak: " + finalStreak + " 🔥");
-                            
-                            SharedPreferences prefs = getSharedPreferences("ChallengeAppPrefs", MODE_PRIVATE);
-                            prefs.edit().putInt("currentStreak", finalStreak).apply();
-                            updateWidgetStreak();
-                        }
-                    });
-                    
-                } catch (Exception e) {
-                    Log.e("GitHubStreak", "Error fetching streak", e);
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            TextView tvCurrentStreak = findViewById(R.id.tvCurrentStreak);
-                            tvCurrentStreak.setText("GitHub Current Streak: Error");
-                        }
-                    });
-                }
+                });
             }
         });
     }
